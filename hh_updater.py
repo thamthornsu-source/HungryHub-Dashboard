@@ -202,24 +202,30 @@ def deploy_to_netlify():
     zip_path = Path("/tmp/deploy.zip")
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
         zf.write(DASHBOARD_HTML, "index.html")
+    log(f"Uploading deploy.zip ({zip_path.stat().st_size:,} bytes)...")
     r = subprocess.run([
         "curl","-s","-X","POST",
         f"https://api.netlify.com/api/v1/sites/{NETLIFY_SITE_ID}/deploys",
         "-H", f"Authorization: Bearer {NETLIFY_TOKEN}",
         "-H", "Content-Type: application/zip",
-        "--data-binary", f"@{zip_path}"
+        "--data-binary", f"@{zip_path}",
+        "-w", "\n%{http_code}"
     ], capture_output=True, text=True)
-    if r.returncode == 0:
-        try:
-            resp = json.loads(r.stdout)
-            url = resp.get("ssl_url") or resp.get("url") or f"https://{NETLIFY_SITE_ID}.netlify.app"
-            log(f"Deployed to Netlify → {url}")
-            return url
-        except:
-            log(f"Netlify deploy response: {r.stdout[:300]}")
-    else:
-        log(f"Netlify deploy failed: {r.stderr[:200]}")
-    return f"https://{NETLIFY_SITE_ID}.netlify.app"
+    if r.returncode != 0:
+        log(f"Netlify deploy curl failed (exit {r.returncode}): {r.stderr[:300]}")
+        return None
+    body, _, http_code = r.stdout.rpartition("\n")
+    try:
+        resp = json.loads(body)
+    except Exception:
+        log(f"Netlify deploy: could not parse response (HTTP {http_code}): {body[:500]}")
+        return None
+    url = resp.get("ssl_url") or resp.get("url")
+    if not http_code.startswith("2") or not url:
+        log(f"Netlify deploy FAILED (HTTP {http_code}): {body[:500]}")
+        return None
+    log(f"Deployed to Netlify → {url} (HTTP {http_code}, deploy id {resp.get('id')})")
+    return url
 
 def send_email(total, rev_excl, rev_all, dashboard_url, date_range, email_date, file_size):
     try:
@@ -269,6 +275,8 @@ def main():
         log("No records — exiting"); sys.exit(0)
     rev_all, rev_excl = update_dashboard(records)
     deploy_url = deploy_to_netlify()
+    if not deploy_url:
+        log("Deploy failed — not sending success email"); sys.exit(1)
     dates = sorted(r["dining_date"] for r in records if r.get("dining_date"))
     date_range = f"{dates[0]} → {dates[-1]}" if dates else "N/A"
     send_email(len(records), rev_excl, rev_all, deploy_url, date_range, email_date, file_size)
