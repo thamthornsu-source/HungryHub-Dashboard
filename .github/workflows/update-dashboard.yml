@@ -1,0 +1,28 @@
+name: Update HungryHub Dashboard
+
+on:
+  schedule:
+    # 3:00 AM UTC = 10:00 AM Bangkok, Monday-Friday
+    - cron: "0 3 * * 1-5"
+  workflow_dispatch: {}
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install openpyxl
+
+      - name: Run updater
+        env:
+          HH_GMAIL_APP_PASSWORD: ${{ secrets.HH_GMAIL_APP_PASSWORD }}
+          NETLIFY_TOKEN: ${{ secrets.NETLIFY_TOKEN }}
+        run: python3 hh_updater.py
