@@ -12,7 +12,8 @@ except ImportError:
 GMAIL_USER         = "thamthorn.su@gmail.com"
 GMAIL_APP_PASSWORD = os.environ.get("HH_GMAIL_APP_PASSWORD", "")
 NETLIFY_TOKEN      = os.environ.get("NETLIFY_TOKEN", "")
-NETLIFY_SITE_ID    = "visionary-donut-6607b6"
+NETLIFY_SITE_DOMAIN = "visionary-donut-6607b6"  # public *.netlify.app subdomain
+NETLIFY_SITE_ID    = "09b3bf40-a3a9-48c7-921c-6e762b27bec8"  # API site UUID — the deploys endpoint 404s on the name
 NOTIFY_EMAIL       = "thamthorn.suksawat@minor.com"
 HUNGRYHUB_SENDER   = "bookings@hungryhub.net"
 HUNGRYHUB_SUBJECT  = "Booking Export Ready"
@@ -25,7 +26,7 @@ def log(msg):
 
 def fetch_dashboard():
     log("Fetching current dashboard from Netlify...")
-    r = subprocess.run(["curl","-sL",f"https://{NETLIFY_SITE_ID}.netlify.app","-o",str(DASHBOARD_HTML)], capture_output=True)
+    r = subprocess.run(["curl","-sL",f"https://{NETLIFY_SITE_DOMAIN}.netlify.app","-o",str(DASHBOARD_HTML)], capture_output=True)
     if r.returncode != 0 or not DASHBOARD_HTML.exists() or DASHBOARD_HTML.stat().st_size < 1000:
         sys.exit("Failed to fetch dashboard HTML from Netlify")
     log(f"Dashboard fetched ({DASHBOARD_HTML.stat().st_size:,} bytes)")
