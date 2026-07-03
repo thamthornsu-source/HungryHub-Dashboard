@@ -201,8 +201,13 @@ def update_dashboard(records):
 
 def deploy_to_netlify():
     zip_path = Path("/tmp/deploy.zip")
+    headers_path = Path("/tmp/_headers")
+    # Without this, Netlify's raw zip-upload API serves index.html as
+    # text/plain instead of text/html — browsers then show it as source code.
+    headers_path.write_text("/*\n  Content-Type: text/html; charset=utf-8\n", encoding="utf-8")
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
         zf.write(DASHBOARD_HTML, "index.html")
+        zf.write(headers_path, "_headers")
     log(f"Uploading deploy.zip ({zip_path.stat().st_size:,} bytes)...")
     r = subprocess.run([
         "curl","-s","-X","POST",
