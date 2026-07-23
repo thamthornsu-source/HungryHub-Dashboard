@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Library Book Inventory</title>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --panel: #ffffff;
+    --border: #e0e3e8;
+    --text: #1c1f26;
+    --muted: #6b7280;
+    --accent: #2f6feb;
+    --accent-dark: #1f4fb0;
+    --danger: #d64545;
+    --ok-bg: #e6f4ea;
+    --ok-text: #1e7a34;
+    --out-bg: #fdecec;
+    --out-text: #b03434;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161a;
+      --panel: #1d2026;
+      --border: #2c303a;
+      --text: #e7e9ee;
+      --muted: #9aa0ac;
+      --accent: #5b8def;
+      --accent-dark: #7ba3f2;
+      --danger: #e07070;
+      --ok-bg: #16351f;
+      --ok-text: #7fd396;
+      --out-bg: #3a1c1c;
+      --out-text: #f2a3a3;
+      --shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 20px 60px; }
+  header.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  h1 { font-size: 1.5rem; margin: 0; }
+  .sub { color: var(--muted); font-size: 0.85rem; margin-top: 2px; }
+  button {
+    font: inherit; cursor: pointer; border: 1px solid var(--border);
+    background: var(--panel); color: var(--text); border-radius: 8px;
+    padding: 8px 14px; transition: background .15s;
+  }
+  button:hover { background: var(--bg); }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button.primary:hover { background: var(--accent-dark); }
+  button.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+  button.small { padding: 4px 9px; font-size: 0.8rem; border-radius: 6px; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  input, select, textarea {
+    font: inherit; padding: 8px 10px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--panel); color: var(--text);
+  }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); }
+  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding: 14px 16px; margin-bottom: 16px; }
+  .toolbar input[type=text] { width: 220px; }
+  .toolbar .spacer { flex: 1; }
+  .status-pill { padding: 2px 9px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; display: inline-block; }
+  .status-pill.available { background: var(--ok-bg); color: var(--ok-text); }
+  .status-pill.checked-out { background: var(--out-bg); color: var(--out-text); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  thead th {
+    text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border);
+    color: var(--muted); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: .03em;
+    position: sticky; top: 0; background: var(--panel);
+  }
+  tbody td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tbody tr:hover { background: var(--bg); }
+  .barcode-cell svg { display: block; height: 34px; }
+  .id-code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem; color: var(--muted); }
+  .row-actions { display: flex; gap: 6px; }
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .table-scroll { overflow-x: auto; }
+
+  /* modal */
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    align-items: center; justify-content: center; z-index: 50; padding: 20px;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal { background: var(--panel); border-radius: 12px; padding: 22px; width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 30px rgba(0,0,0,0.25); }
+  .modal h2 { margin-top: 0; font-size: 1.15rem; }
+  .field { margin-bottom: 13px; display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 0.82rem; color: var(--muted); font-weight: 600; }
+  .field input, .field select, .field textarea { width: 100%; }
+  .field-row { display: flex; gap: 10px; }
+  .field-row .field { flex: 1; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+  .status-toggle { display: flex; gap: 8px; }
+  .status-toggle label { display: flex; align-items: center; gap: 6px; font-weight: 400; color: var(--text); font-size: 0.9rem; }
+
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 18px; border-radius: 8px; font-size: 0.88rem; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 100; }
+  .toast.show { opacity: 1; }
+
+  .conn-banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; margin-bottom: 16px; }
+  .conn-banner.ok { color: var(--ok-text); }
+  .conn-banner.bad { color: var(--out-text); }
+
+  #printArea { display: none; }
+  @media print {
+    body * { visibility: hidden; }
+    #printArea, #printArea * { visibility: visible; }
+    #printArea { display: block; position: absolute; top: 0; left: 0; }
+    @page { size: var(--page-size, A4); margin: 0; }
+  }
+  .label-sheet {
+    display: grid;
+    width: var(--page-w, 210mm);
+    padding: var(--pad-top, 15.15mm) var(--pad-side, 7.2mm);
+    box-sizing: border-box;
+    grid-template-columns: repeat(var(--cols, 3), var(--label-w, 63.5mm));
+    grid-auto-rows: var(--label-h, 38.1mm);
+    column-gap: var(--col-gap, 2.5mm);
+    row-gap: var(--row-gap, 0mm);
+  }
+  .label {
+    border: 1px dashed #ccc;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 2mm; overflow: hidden; text-align: center;
+  }
+  .label .lname { font-size: 8.5pt; font-weight: 600; margin-top: 1mm; line-height: 1.15; max-height: 2.3em; overflow: hidden; }
+  .label .lgenre { font-size: 7pt; color: #555; margin-top: 0.5mm; }
+  .label svg { height: 11mm; max-width: 100%; }
+  @media screen { .label { background: #fff; } }
+</style>
+</head>
+<body>
+<div class="wrap" id="appRoot">
+
+  <header class="top">
+    <div>
+      <h1>📚 Library Book Inventory</h1>
+      <div class="sub" id="subLine">Hotel counter library &middot; loading&hellip;</div>
+    </div>
+    <button id="settingsBtn" title="Connect Google Sheet">⚙ Connect</button>
+  </header>
+
+  <div class="panel conn-banner" id="connBanner" style="display:none;"></div>
+
+  <div class="panel toolbar">
+    <input type="text" id="searchInput" placeholder="Search name, genre, shelf, ID...">
+    <select id="genreFilter"><option value="">All genres</option></select>
+    <select id="statusFilter">
+      <option value="">All statuses</option>
+      <option value="Available">Available</option>
+      <option value="Checked Out">Checked Out</option>
+    </select>
+    <div class="spacer"></div>
+    <button id="refreshBtn">↻ Refresh</button>
+    <button id="printSelectedBtn" disabled>🖨 Print Labels (<span id="selCount">0</span>)</button>
+    <button class="primary" id="addBtn">+ Add Book</button>
+  </div>
+
+  <div class="panel">
+    <div class="table-scroll">
+      <table id="booksTable">
+        <thead>
+          <tr>
+            <th style="width:28px;"><input type="checkbox" id="selectAll"></th>
+            <th style="width:140px;">Barcode</th>
+            <th>Name</th>
+            <th>Genre</th>
+            <th>Shelf</th>
+            <th>Status</th>
+            <th>Added</th>
+            <th style="width:110px;"></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="empty-state" id="emptyState" style="display:none;"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Settings modal -->
+<div class="modal-backdrop" id="settingsModal">
+  <div class="modal">
+    <h2>Connect Google Sheet</h2>
+    <p class="sub" style="margin-top:-8px;">Paste the Apps Script Web App URL for your Books sheet. Saved only in this browser.</p>
+    <div class="field">
+      <label>Web App URL</label>
+      <input type="text" id="webAppUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
+    </div>
+    <div class="modal-actions">
+      <button id="settingsCancelBtn">Cancel</button>
+      <button class="primary" id="settingsSaveBtn">Save & Connect</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit modal -->
+<div class="modal-backdrop" id="bookModal">
+  <div class="modal">
+    <h2 id="bookModalTitle">Add Book</h2>
+    <input type="hidden" id="editId">
+    <div class="field">
+      <label>Book Name *</label>
+      <input type="text" id="fName" required>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Genre *</label>
+        <input type="text" id="fGenre" list="genreList" required>
+        <datalist id="genreList"></datalist>
+      </div>
+      <div class="field">
+        <label>Shelf / Location</label>
+        <input type="text" id="fShelf" placeholder="e.g. Shelf 2">
+      </div>
+    </div>
+    <div class="field">
+      <label>Status</label>
+      <div class="status-toggle">
+        <label><input type="radio" name="status" value="Available" checked> Available</label>
+        <label><input type="radio" name="status" value="Checked Out"> Checked Out</label>
+      </div>
+    </div>
+    <div class="field-row" id="borrowFields" style="display:none;">
+      <div class="field">
+        <label>Borrower</label>
+        <input type="text" id="fBorrower" placeholder="Guest / room no.">
+      </div>
+      <div class="field">
+        <label>Due Date</label>
+        <input type="date" id="fDueDate">
+      </div>
+    </div>
+    <div class="field">
+      <label>Notes / Condition</label>
+      <textarea id="fNotes" rows="2" placeholder="Optional"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button id="bookCancelBtn">Cancel</button>
+      <button class="primary" id="bookSaveBtn">Save Book</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Print area -->
+<div id="printArea">
+  <div class="label-sheet" id="labelSheet"></div>
+</div>
+
+<!-- Print options modal -->
+<div class="modal-backdrop" id="printModal">
+  <div class="modal">
+    <h2>Print Labels</h2>
+    <div class="field">
+      <label>Label sheet layout</label>
+      <select id="labelPreset">
+        <option value="a4_21">A4 &middot; 21 labels/sheet (63.5×38.1mm, 3×7) &mdash; Avery L7160-style</option>
+        <option value="a4_24">A4 &middot; 24 labels/sheet (70×37mm, 3×8)</option>
+        <option value="letter_30">Letter &middot; 30 labels/sheet (2.625"×1", 3×10) &mdash; Avery 5160</option>
+        <option value="custom">Custom&hellip;</option>
+      </select>
+    </div>
+    <div id="customFields" style="display:none;">
+      <div class="field-row">
+        <div class="field"><label>Page</label>
+          <select id="cPage"><option value="A4">A4</option><option value="letter">Letter</option></select>
+        </div>
+        <div class="field"><label>Columns</label><input type="number" id="cCols" value="3" min="1"></div>
+        <div class="field"><label>Rows</label><input type="number" id="cRows" value="7" min="1"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Label width (mm)</label><input type="number" id="cLW" value="63.5"></div>
+        <div class="field"><label>Label height (mm)</label><input type="number" id="cLH" value="38.1"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Top margin (mm)</label><input type="number" id="cPadTop" value="15.15"></div>
+        <div class="field"><label>Side margin (mm)</label><input type="number" id="cPadSide" value="7.2"></div>
+        <div class="field"><label>Column gap (mm)</label><input type="number" id="cColGap" value="2.5"></div>
+      </div>
+      <p class="sub">These are approximate. If labels drift on your sheet, tweak margins and print a test page first.</p>
+    </div>
+    <div class="field">
+      <label><input type="checkbox" id="showGenreOnLabel" checked> Show genre on label</label>
+    </div>
+    <div class="modal-actions">
+      <button id="printCancelBtn">Cancel</button>
+      <button class="primary" id="printGoBtn">Print</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  const LS_URL_KEY = 'lib_webapp_url';
+  const LS_PRINT_KEY = 'lib_print_prefs';
+
+  let books = [];
+  let selectedIds = new Set();
+  let webAppUrl = localStorage.getItem(LS_URL_KEY) || '';
+
+  const $ = (id) => document.getElementById(id);
+  const tbody = $('tbody');
+  const emptyState = $('emptyState');
+  const subLine = $('subLine');
+  const connBanner = $('connBanner');
+
+  function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ---------- Connection ----------
+
+  function showConnBanner(ok, msg) {
+    connBanner.style.display = 'flex';
+    connBanner.className = 'panel conn-banner ' + (ok ? 'ok' : 'bad');
+    connBanner.innerHTML = '<span>' + (ok ? '✓ ' : '⚠ ') + escapeHtml(msg) + '</span>' +
+      (ok ? '' : '<button class="small" id="bannerConnectBtn">Connect Sheet</button>');
+    if (!ok) $('bannerConnectBtn').onclick = openSettings;
+  }
+
+  function openSettings() {
+    $('webAppUrlInput').value = webAppUrl;
+    $('settingsModal').classList.add('open');
+  }
+  function closeSettings() { $('settingsModal').classList.remove('open'); }
+
+  $('settingsBtn').onclick = openSettings;
+  $('settingsCancelBtn').onclick = closeSettings;
+  $('settingsSaveBtn').onclick = () => {
+    const url = $('webAppUrlInput').value.trim();
+    if (!url) { toast('Enter a Web App URL'); return; }
+    webAppUrl = url;
+    localStorage.setItem(LS_URL_KEY, url);
+    closeSettings();
+    loadBooks();
+  };
+
+  // ---------- Data ----------
+
+  async function apiGet() {
+    const res = await fetch(webAppUrl, { method: 'GET' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  }
+
+  async function apiPost(payload) {
+    const res = await fetch(webAppUrl, { method: 'POST', body: JSON.stringify(payload) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  }
+
+  async function loadBooks() {
+    if (!webAppUrl) {
+      showConnBanner(false, 'Not connected. Click "Connect Sheet" to link your Google Sheet.');
+      subLine.textContent = 'Not connected yet';
+      books = [];
+      render();
+      return;
+    }
+    subLine.textContent = 'Loading books…';
+    try {
+      const data = await apiGet();
+      if (!data.ok) throw new Error(data.error || 'Unknown error');
+      books = data.books || [];
+      connBanner.style.display = 'none';
+      subLine.textContent = books.length + ' book' + (books.length === 1 ? '' : 's') + ' in the collection';
+      render();
+    } catch (err) {
+      showConnBanner(false, 'Could not reach the sheet (' + err.message + ').');
+      subLine.textContent = 'Connection error';
+    }
+  }
+
+  // ---------- Rendering ----------
+
+  function uniqueGenres() {
+    return [...new Set(books.map(b => b.genre).filter(Boolean))].sort();
+  }
+
+  function refreshGenreControls() {
+    const genres = uniqueGenres();
+    const sel = $('genreFilter');
+    const current = sel.value;
+    sel.innerHTML = '<option value="">All genres</option>' +
+      genres.map(g => '<option value="' + escapeHtml(g) + '">' + escapeHtml(g) + '</option>').join('');
+    sel.value = genres.includes(current) ? current : '';
+    $('genreList').innerHTML = genres.map(g => '<option value="' + escapeHtml(g) + '">').join('');
+  }
+
+  function filteredBooks() {
+    const q = $('searchInput').value.trim().toLowerCase();
+    const genre = $('genreFilter').value;
+    const status = $('statusFilter').value;
+    return books.filter(b => {
+      if (genre && b.genre !== genre) return false;
+      if (status && b.status !== status) return false;
+      if (q) {
+        const hay = [b.id, b.name, b.genre, b.shelf].join(' ').toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }
+
+  function render() {
+    refreshGenreControls();
+    const list = filteredBooks();
+    tbody.innerHTML = '';
+    emptyState.style.display = list.length ? 'none' : 'block';
+    emptyState.textContent = books.length ? 'No books match your filters.' : 'No books yet — click "Add Book" to start your inventory.';
+
+    list.forEach(b => {
+      const tr = document.createElement('tr');
+      const statusClass = b.status === 'Checked Out' ? 'checked-out' : 'available';
+      const statusExtra = b.status === 'Checked Out' && (b.borrower || b.dueDate)
+        ? '<div class="sub" style="margin-top:2px;">' + escapeHtml(b.borrower || '') + (b.dueDate ? ' · due ' + escapeHtml(b.dueDate) : '') + '</div>'
+        : '';
+      tr.innerHTML =
+        '<td><input type="checkbox" class="rowSel" data-id="' + escapeHtml(b.id) + '" ' + (selectedIds.has(b.id) ? 'checked' : '') + '></td>' +
+        '<td class="barcode-cell"><svg class="bc" data-code="' + escapeHtml(b.id) + '"></svg><div class="id-code">' + escapeHtml(b.id) + '</div></td>' +
+        '<td>' + escapeHtml(b.name) + '</td>' +
+        '<td>' + escapeHtml(b.genre) + '</td>' +
+        '<td>' + escapeHtml(b.shelf) + '</td>' +
+        '<td><span class="status-pill ' + statusClass + '">' + escapeHtml(b.status || 'Available') + '</span>' + statusExtra + '</td>' +
+        '<td>' + escapeHtml(b.dateAdded) + '</td>' +
+        '<td class="row-actions"><button class="small" data-edit="' + escapeHtml(b.id) + '">Edit</button>' +
+        '<button class="small danger" data-del="' + escapeHtml(b.id) + '">Delete</button></td>';
+      tbody.appendChild(tr);
+    });
+
+    // render barcodes
+    tbody.querySelectorAll('svg.bc').forEach(svg => {
+      try {
+        JsBarcode(svg, svg.dataset.code, { format: 'CODE128', displayValue: false, height: 32, margin: 0, width: 1.6 });
+      } catch (e) { /* ignore malformed code */ }
+    });
+
+    tbody.querySelectorAll('.rowSel').forEach(cb => {
+      cb.onchange = () => {
+        if (cb.checked) selectedIds.add(cb.dataset.id); else selectedIds.delete(cb.dataset.id);
+        updateSelCount();
+      };
+    });
+    tbody.querySelectorAll('[data-edit]').forEach(btn => btn.onclick = () => openBookModal(btn.dataset.edit));
+    tbody.querySelectorAll('[data-del]').forEach(btn => btn.onclick = () => deleteBook(btn.dataset.del));
+
+    updateSelCount();
+  }
+
+  function updateSelCount() {
+    // drop selections for books no longer present
+    const validIds = new Set(books.map(b => b.id));
+    [...selectedIds].forEach(id => { if (!validIds.has(id)) selectedIds.delete(id); });
+    $('selCount').textContent = selectedIds.size;
+    $('printSelectedBtn').disabled = selectedIds.size === 0;
+    $('selectAll').checked = selectedIds.size > 0 && filteredBooks().every(b => selectedIds.has(b.id));
+  }
+
+  $('selectAll').onchange = (e) => {
+    filteredBooks().forEach(b => { if (e.target.checked) selectedIds.add(b.id); else selectedIds.delete(b.id); });
+    render();
+  };
+
+  $('searchInput').oninput = render;
+  $('genreFilter').onchange = render;
+  $('statusFilter').onchange = render;
+  $('refreshBtn').onclick = loadBooks;
+
+  // ---------- Add / Edit ----------
+
+  function openBookModal(id) {
+    const b = id ? books.find(x => x.id === id) : null;
+    $('bookModalTitle').textContent = b ? 'Edit Book' : 'Add Book';
+    $('editId').value = b ? b.id : '';
+    $('fName').value = b ? b.name : '';
+    $('fGenre').value = b ? b.genre : '';
+    $('fShelf').value = b ? b.shelf : '';
+    $('fNotes').value = b ? b.notes : '';
+    $('fBorrower').value = b ? b.borrower || '' : '';
+    $('fDueDate').value = b ? b.dueDate || '' : '';
+    const status = b ? (b.status || 'Available') : 'Available';
+    document.querySelectorAll('input[name=status]').forEach(r => r.checked = (r.value === status));
+    $('borrowFields').style.display = status === 'Checked Out' ? 'flex' : 'none';
+    $('bookModal').classList.add('open');
+  }
+  function closeBookModal() { $('bookModal').classList.remove('open'); }
+
+  document.querySelectorAll('input[name=status]').forEach(r => {
+    r.onchange = () => { $('borrowFields').style.display = r.value === 'Checked Out' && r.checked ? 'flex' : 'none'; };
+  });
+
+  $('addBtn').onclick = () => openBookModal(null);
+  $('bookCancelBtn').onclick = closeBookModal;
+
+  $('bookSaveBtn').onclick = async () => {
+    const name = $('fName').value.trim();
+    const genre = $('fGenre').value.trim();
+    if (!name || !genre) { toast('Book name and genre are required'); return; }
+    if (!webAppUrl) { toast('Connect a Google Sheet first'); return; }
+    const status = document.querySelector('input[name=status]:checked').value;
+    const book = {
+      name, genre,
+      shelf: $('fShelf').value.trim(),
+      status,
+      borrower: status === 'Checked Out' ? $('fBorrower').value.trim() : '',
+      dueDate: status === 'Checked Out' ? $('fDueDate').value : '',
+      notes: $('fNotes').value.trim()
+    };
+    const editId = $('editId').value;
+    $('bookSaveBtn').disabled = true;
+    try {
+      if (editId) {
+        book.id = editId;
+        const res = await apiPost({ action: 'update', book });
+        if (!res.ok) throw new Error(res.error || 'Update failed');
+        toast('Book updated');
+      } else {
+        const res = await apiPost({ action: 'add', book });
+        if (!res.ok) throw new Error(res.error || 'Add failed');
+        toast('Book added as ' + res.id);
+      }
+      closeBookModal();
+      await loadBooks();
+    } catch (err) {
+      toast('Error: ' + err.message);
+    } finally {
+      $('bookSaveBtn').disabled = false;
+    }
+  };
+
+  async function deleteBook(id) {
+    const b = books.find(x => x.id === id);
+    if (!confirm('Delete "' + (b ? b.name : id) + '"? This cannot be undone.')) return;
+    try {
+      const res = await apiPost({ action: 'delete', id });
+      if (!res.ok) throw new Error(res.error || 'Delete failed');
+      selectedIds.delete(id);
+      toast('Book deleted');
+      await loadBooks();
+    } catch (err) {
+      toast('Error: ' + err.message);
+    }
+  }
+
+  // ---------- Printing ----------
+
+  const PRESETS = {
+    a4_21: { page: 'A4', pageW: '210mm', cols: 3, rows: 7, lw: 63.5, lh: 38.1, padTop: 15.15, padSide: 7.2, colGap: 2.5, rowGap: 0 },
+    a4_24: { page: 'A4', pageW: '210mm', cols: 3, rows: 8, lw: 70, lh: 37, padTop: 6, padSide: 0, colGap: 0, rowGap: 0 },
+    letter_30: { page: 'letter', pageW: '215.9mm', cols: 3, rows: 10, lw: 66.675, lh: 25.4, padTop: 12.7, padSide: 4.75, colGap: 3.175, rowGap: 0 }
+  };
+
+  $('printSelectedBtn').onclick = () => {
+    const prefs = JSON.parse(localStorage.getItem(LS_PRINT_KEY) || '{}');
+    $('labelPreset').value = prefs.preset || 'a4_21';
+    $('showGenreOnLabel').checked = prefs.showGenre !== false;
+    toggleCustomFields();
+    $('printModal').classList.add('open');
+  };
+  $('printCancelBtn').onclick = () => $('printModal').classList.remove('open');
+  $('labelPreset').onchange = toggleCustomFields;
+
+  function toggleCustomFields() {
+    $('customFields').style.display = $('labelPreset').value === 'custom' ? 'block' : 'none';
+  }
+
+  $('printGoBtn').onclick = () => {
+    const presetKey = $('labelPreset').value;
+    const showGenre = $('showGenreOnLabel').checked;
+    localStorage.setItem(LS_PRINT_KEY, JSON.stringify({ preset: presetKey, showGenre }));
+
+    let cfg;
+    if (presetKey === 'custom') {
+      cfg = {
+        page: $('cPage').value,
+        pageW: $('cPage').value === 'A4' ? '210mm' : '215.9mm',
+        cols: parseFloat($('cCols').value), rows: parseFloat($('cRows').value),
+        lw: parseFloat($('cLW').value), lh: parseFloat($('cLH').value),
+        padTop: parseFloat($('cPadTop').value), padSide: parseFloat($('cPadSide').value),
+        colGap: parseFloat($('cColGap').value), rowGap: 0
+      };
+    } else {
+      cfg = PRESETS[presetKey];
+    }
+
+    const sheet = $('labelSheet');
+    sheet.style.setProperty('--page-w', cfg.pageW);
+    sheet.style.setProperty('--cols', cfg.cols);
+    sheet.style.setProperty('--label-w', cfg.lw + 'mm');
+    sheet.style.setProperty('--label-h', cfg.lh + 'mm');
+    sheet.style.setProperty('--pad-top', cfg.padTop + 'mm');
+    sheet.style.setProperty('--pad-side', cfg.padSide + 'mm');
+    sheet.style.setProperty('--col-gap', cfg.colGap + 'mm');
+    document.documentElement.style.setProperty('--page-size', cfg.page === 'letter' ? 'letter' : 'A4');
+
+    const list = books.filter(b => selectedIds.has(b.id));
+    sheet.innerHTML = list.map(b =>
+      '<div class="label"><svg class="pbc" data-code="' + escapeHtml(b.id) + '"></svg>' +
+      '<div class="lname">' + escapeHtml(b.name) + '</div>' +
+      (showGenre ? '<div class="lgenre">' + escapeHtml(b.genre) + '</div>' : '') +
+      '</div>'
+    ).join('');
+    sheet.querySelectorAll('svg.pbc').forEach(svg => {
+      JsBarcode(svg, svg.dataset.code, { format: 'CODE128', displayValue: true, fontSize: 9, height: 28, margin: 0, width: 1.3 });
+    });
+
+    $('printModal').classList.remove('open');
+    setTimeout(() => window.print(), 50);
+  };
+
+  // ---------- Init ----------
+
+  showConnBanner(false, 'Not connected.');
+  loadBooks();
+})();
+</script>
+</body>
+</html>
