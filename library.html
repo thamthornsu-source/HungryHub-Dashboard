@@ -138,9 +138,10 @@
   .label .qr svg { width: 100% !important; height: 100% !important; display: block; }
   .linfo { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; min-width: 0; flex: 1; }
   .brand-logo { width: var(--logo-size, 28mm); height: auto; max-height: calc(var(--label-h, 40mm) - 15mm); flex: 0 0 auto; display: block; object-fit: contain; }
-  .lname { font-size: 9.5pt; font-weight: 700; line-height: 1.14; color: #14161a; max-height: 3.4em; overflow: hidden; }
-  .lmeta { font-size: 6.5pt; color: #555; margin-top: 0.9mm; }
-  .lmeta .lid { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: #333; }
+  .qr-wrap { display: flex; flex-direction: column; align-items: center; flex: 0 0 auto; }
+  .lid { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 6.5pt; font-weight: 600; color: #333; margin-top: 1mm; letter-spacing: 0.3px; }
+  .lname { font-size: 10pt; font-weight: 800; line-height: 1.14; color: #14161a; max-height: 3.4em; overflow: hidden; }
+  .lgenre { font-size: 7pt; color: #666; margin-top: 1mm; }
   .label-foot {
     text-align: center; font-size: 5.8pt; letter-spacing: 0.5px; color: #8a9097;
     border-top: 0.25mm solid #e6e8ec; margin-top: 1mm; padding-top: 1mm; text-transform: uppercase;
@@ -641,7 +642,7 @@
     sheet.style.setProperty('--pad-side', cfg.padSide + 'mm');
     sheet.style.setProperty('--col-gap', cfg.colGap + 'mm');
     // QR square on the left; logo auto-width on the right (never stretched)
-    const qrMM = Math.max(10, Math.min(cfg.lh - 14, cfg.lw * 0.28, 26));
+    const qrMM = Math.max(10, Math.min(cfg.lh - 16, cfg.lw * 0.26, 25));
     sheet.style.setProperty('--qr-size', qrMM + 'mm');
     const logoMM = Math.min(cfg.lw * 0.28, 30);
     sheet.style.setProperty('--logo-size', logoMM + 'mm');
@@ -655,12 +656,13 @@
     sheet.innerHTML = list.map(b =>
       '<div class="label">' +
         '<div class="label-body">' +
-          '<div class="qr">' + qrSvg(b.id) + '</div>' +
+          '<div class="qr-wrap">' +
+            '<div class="qr">' + qrSvg(b.id) + '</div>' +
+            '<div class="lid">' + escapeHtml(b.id) + '</div>' +
+          '</div>' +
           '<div class="linfo">' +
             '<div class="lname">' + escapeHtml(b.name) + '</div>' +
-            '<div class="lmeta"><span class="lid">' + escapeHtml(b.id) + '</span>' +
-              (showGenre && b.genre ? ' &middot; ' + escapeHtml(b.genre) : '') +
-            '</div>' +
+            (showGenre && b.genre ? '<div class="lgenre">' + escapeHtml(b.genre) + '</div>' : '') +
           '</div>' +
           BRAND_HTML +
         '</div>' +
