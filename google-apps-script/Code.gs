@@ -95,10 +95,10 @@ function nextId_(sheet) {
   const data = sheet.getDataRange().getValues();
   let max = 0;
   for (let i = 1; i < data.length; i++) {
-    const m = String(data[i][0] || '').match(/^LIB-(\d+)$/);
+    const m = String(data[i][0] || '').match(/^vriv-(\d+)$/);
     if (m) max = Math.max(max, parseInt(m[1], 10));
   }
-  return 'LIB-' + String(max + 1).padStart(4, '0');
+  return 'vriv-' + String(max + 1).padStart(5, '0');
 }
 
 function findRowById_(sheet, id) {

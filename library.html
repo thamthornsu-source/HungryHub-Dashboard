@@ -265,6 +265,7 @@
     <div class="field">
       <label>Label sheet layout</label>
       <select id="labelPreset">
+        <option value="label_100x40">100×40mm labels &middot; A4, 14/sheet (2×7)</option>
         <option value="a4_21">A4 &middot; 21 labels/sheet (63.5×38.1mm, 3×7) &mdash; Avery L7160-style</option>
         <option value="a4_24">A4 &middot; 24 labels/sheet (70×37mm, 3×8)</option>
         <option value="letter_30">Letter &middot; 30 labels/sheet (2.625"×1", 3×10) &mdash; Avery 5160</option>
@@ -565,6 +566,7 @@
   // ---------- Printing ----------
 
   const PRESETS = {
+    label_100x40: { page: 'A4', pageW: '210mm', cols: 2, rows: 7, lw: 100, lh: 40, padTop: 8.5, padSide: 3, colGap: 4, rowGap: 0 },
     a4_21: { page: 'A4', pageW: '210mm', cols: 3, rows: 7, lw: 63.5, lh: 38.1, padTop: 15.15, padSide: 7.2, colGap: 2.5, rowGap: 0 },
     a4_24: { page: 'A4', pageW: '210mm', cols: 3, rows: 8, lw: 70, lh: 37, padTop: 6, padSide: 0, colGap: 0, rowGap: 0 },
     letter_30: { page: 'letter', pageW: '215.9mm', cols: 3, rows: 10, lw: 66.675, lh: 25.4, padTop: 12.7, padSide: 4.75, colGap: 3.175, rowGap: 0 }
@@ -572,7 +574,7 @@
 
   $('printSelectedBtn').onclick = () => {
     const prefs = JSON.parse(localStorage.getItem(LS_PRINT_KEY) || '{}');
-    $('labelPreset').value = prefs.preset || 'a4_21';
+    $('labelPreset').value = prefs.preset || 'label_100x40';
     $('showGenreOnLabel').checked = prefs.showGenre !== false;
     toggleCustomFields();
     $('printModal').classList.add('open');
