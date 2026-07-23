@@ -128,18 +128,29 @@
     row-gap: var(--row-gap, 0mm);
   }
   .label {
-    border: 1px dashed #ccc;
-    display: flex; flex-direction: row; align-items: center; justify-content: flex-start;
-    gap: 3mm; padding: 2mm 3mm; overflow: hidden; text-align: left;
+    border: 0.3mm solid #d8dbe0; border-radius: 1.8mm;
+    display: flex; flex-direction: column;
+    padding: 2mm 2.6mm 1.4mm; overflow: hidden;
+    background: #fff; color: #1c1f26;
   }
+  .label-body { flex: 1; display: flex; flex-direction: row; align-items: center; gap: 3mm; min-height: 0; }
   .label .qr { width: var(--qr-size, 24mm); height: var(--qr-size, 24mm); flex: 0 0 auto; }
   .label .qr svg { width: 100% !important; height: 100% !important; display: block; }
-  .label .ltext { display: flex; flex-direction: column; min-width: 0; }
-  .label .lid { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 7pt; color: #333; }
-  .label .lname { font-size: 9pt; font-weight: 700; line-height: 1.15; margin-top: 0.6mm; max-height: 2.4em; overflow: hidden; }
-  .label .lgenre { font-size: 7pt; color: #555; margin-top: 0.4mm; }
-  .label .lprop { font-size: 6pt; color: #666; font-style: italic; margin-top: 0.9mm; line-height: 1.1; }
-  @media screen { .label { background: #fff; } }
+  .linfo { display: flex; flex-direction: column; justify-content: center; min-width: 0; flex: 1; }
+  .brand { display: flex; align-items: center; gap: 1.4mm; margin-bottom: 1mm; }
+  .brand-emblem { width: 5mm; height: 5mm; flex: 0 0 auto; }
+  .brand-emblem path { fill: none; stroke: #b08d57; stroke-width: 2; stroke-linecap: round; }
+  .brand-wm { line-height: 1.05; }
+  .brand-mark { font-size: 8.5pt; font-weight: 800; letter-spacing: 0.4px; color: #2b2f36; text-transform: uppercase; }
+  .brand-mark .plus { color: #b08d57; }
+  .brand-sub { font-size: 5pt; letter-spacing: 1.4px; color: #7a8087; text-transform: uppercase; margin-top: 0.4mm; }
+  .lname { font-size: 9.5pt; font-weight: 700; line-height: 1.12; color: #14161a; max-height: 2.3em; overflow: hidden; }
+  .lmeta { font-size: 6.5pt; color: #555; margin-top: 0.7mm; }
+  .lmeta .lid { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: #333; }
+  .label-foot {
+    text-align: center; font-size: 5.8pt; letter-spacing: 0.5px; color: #8a9097;
+    border-top: 0.25mm solid #e6e8ec; margin-top: 1mm; padding-top: 1mm; text-transform: uppercase;
+  }
 </style>
 </head>
 <body>
@@ -313,6 +324,19 @@
   const LS_URL_KEY = 'lib_webapp_url';
   const LS_PRINT_KEY = 'lib_print_prefs';
   const PROPERTY_LINE = 'Property of Avani+ Riverside Bangkok';
+
+  // Mock brand mark — replace the emblem SVG / wordmark with the official
+  // Avani+ logo asset when you have it.
+  const BRAND_HTML =
+    '<div class="brand">' +
+      '<svg class="brand-emblem" viewBox="0 0 24 24">' +
+        '<path d="M2 9 q4 -4 8 0 t8 0"/><path d="M2 15 q4 -4 8 0 t8 0"/>' +
+      '</svg>' +
+      '<div class="brand-wm">' +
+        '<div class="brand-mark">AVANI<span class="plus">+</span></div>' +
+        '<div class="brand-sub">Riverside &middot; Bangkok</div>' +
+      '</div>' +
+    '</div>';
 
   function qrSvg(text) {
     const qr = qrcode(0, 'M');
@@ -624,21 +648,26 @@
     sheet.style.setProperty('--pad-top', cfg.padTop + 'mm');
     sheet.style.setProperty('--pad-side', cfg.padSide + 'mm');
     sheet.style.setProperty('--col-gap', cfg.colGap + 'mm');
-    // QR square sized to the label, bounded so it fits both short and narrow labels
-    const qrMM = Math.max(10, Math.min(cfg.lh - 6, cfg.lw * 0.42, 32));
+    // QR square sized to the label, leaving room for the brand + footer rows
+    const qrMM = Math.max(10, Math.min(cfg.lh - 14, cfg.lw * 0.34, 28));
     sheet.style.setProperty('--qr-size', qrMM + 'mm');
     document.documentElement.style.setProperty('--page-size', cfg.page === 'letter' ? 'letter' : 'A4');
 
     const list = books.filter(b => selectedIds.has(b.id));
     sheet.innerHTML = list.map(b =>
       '<div class="label">' +
-      '<div class="qr">' + qrSvg(b.id) + '</div>' +
-      '<div class="ltext">' +
-      '<div class="lid">' + escapeHtml(b.id) + '</div>' +
-      '<div class="lname">' + escapeHtml(b.name) + '</div>' +
-      (showGenre ? '<div class="lgenre">' + escapeHtml(b.genre) + '</div>' : '') +
-      '<div class="lprop">' + escapeHtml(PROPERTY_LINE) + '</div>' +
-      '</div></div>'
+        '<div class="label-body">' +
+          '<div class="qr">' + qrSvg(b.id) + '</div>' +
+          '<div class="linfo">' +
+            BRAND_HTML +
+            '<div class="lname">' + escapeHtml(b.name) + '</div>' +
+            '<div class="lmeta"><span class="lid">' + escapeHtml(b.id) + '</span>' +
+              (showGenre && b.genre ? ' &middot; ' + escapeHtml(b.genre) : '') +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="label-foot">' + escapeHtml(PROPERTY_LINE) + '</div>' +
+      '</div>'
     ).join('');
 
     $('printModal').classList.remove('open');
