@@ -8,7 +8,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f4f5f7;color:#1a1a2e;}
-.header{background:linear-gradient(135deg,#e84393 0%,#c2185b 100%);color:white;padding:22px 32px;display:flex;justify-content:space-between;align-items:center;}
+.header{background:linear-gradient(135deg,#dc2626 0%,#b91c1c 100%);color:white;padding:22px 32px;display:flex;justify-content:space-between;align-items:center;}
 .header h1{font-size:21px;font-weight:700;letter-spacing:-0.3px;}
 .header .subtitle{font-size:12px;opacity:.85;margin-top:4px;}
 .header .badge{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;}
@@ -16,7 +16,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 /* KPI */
 .kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:20px;}
 .kpi-card{background:white;border-radius:10px;padding:18px 16px;box-shadow:0 1px 4px rgba(0,0,0,.07);border-left:4px solid transparent;}
-.kpi-card.bookings{border-color:#6366f1;}.kpi-card.arrived{border-color:#22c55e;}.kpi-card.cancel{border-color:#ef4444;}.kpi-card.revenue{border-color:#e84393;}.kpi-card.guests{border-color:#f59e0b;}.kpi-card.rejected{border-color:#94a3b8;}
+.kpi-card.bookings{border-color:#6366f1;}.kpi-card.arrived{border-color:#22c55e;}.kpi-card.cancel{border-color:#ef4444;}.kpi-card.revenue{border-color:#dc2626;}.kpi-card.guests{border-color:#f59e0b;}.kpi-card.rejected{border-color:#94a3b8;}
 .kpi-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;margin-bottom:5px;}
 .kpi-value{font-size:26px;font-weight:700;color:#111827;line-height:1;}
 .kpi-sub{font-size:11px;color:#9ca3af;margin-top:5px;}
@@ -26,13 +26,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .chart-card{background:white;border-radius:10px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.07);}
 .chart-card h3{font-size:11px;font-weight:700;color:#374151;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:8px;}
 .chart-hint{font-size:10px;color:#9ca3af;margin-bottom:10px;}
-.click-badge{background:#fce7f3;color:#be185d;border-radius:4px;padding:1px 6px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;flex-shrink:0;}
+.click-badge{background:#fee2e2;color:#b91c1c;border-radius:4px;padding:1px 6px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;flex-shrink:0;}
 /* Booking pickup section */
 .pickup-section{margin-bottom:18px;}
 .pickup-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:14px;}
 .pickup-card{background:white;border-radius:10px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.07);border:2px solid transparent;cursor:pointer;transition:border-color .15s;}
-.pickup-card:hover{border-color:#f3c6dc;}
-.pickup-card.active{border-color:#e84393;background:#fff5fa;}
+.pickup-card:hover{border-color:#fca5a5;}
+.pickup-card.active{border-color:#dc2626;background:#fef2f2;}
 .pickup-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;margin-bottom:6px;}
 .pickup-value{font-size:24px;font-weight:700;color:#111827;line-height:1;}
 .pickup-delta{font-size:11px;font-weight:600;margin-top:5px;}
@@ -42,7 +42,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .pickup-meta{display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;margin-top:8px;padding-top:8px;border-top:1px solid #f3f4f6;}
 /* Active filter pills */
 .active-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;min-height:0;}
-.pill{display:inline-flex;align-items:center;gap:5px;background:#fce7f3;border:1px solid #f9a8d4;border-radius:20px;padding:3px 10px;font-size:11px;color:#be185d;font-weight:600;}
+.pill{display:inline-flex;align-items:center;gap:5px;background:#fee2e2;border:1px solid #fca5a5;border-radius:20px;padding:3px 10px;font-size:11px;color:#b91c1c;font-weight:600;}
 .pill-x{cursor:pointer;opacity:.6;font-size:14px;line-height:1;}
 .pill-x:hover{opacity:1;}
 /* Pie legend */
@@ -57,15 +57,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .filter-group{display:flex;flex-direction:column;gap:5px;}
 .filter-group label{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;}
 .filters select,.filters input[type=number]{border:1px solid #e5e7eb;border-radius:7px;padding:6px 10px;font-size:12px;color:#374151;background:#f9fafb;outline:none;}
-.filters select:focus,.filters input:focus{border-color:#e84393;}
+.filters select:focus,.filters input:focus{border-color:#dc2626;}
 /* Multi-select restaurant */
 .ms-wrap{position:relative;}
 .ms-trigger{min-width:190px;max-width:300px;border:1px solid #e5e7eb;border-radius:7px;padding:6px 28px 6px 10px;font-size:12px;color:#374151;background:#f9fafb;cursor:pointer;display:flex;align-items:center;flex-wrap:wrap;gap:4px;min-height:34px;user-select:none;}
 .ms-trigger:hover{border-color:#d1d5db;}
-.ms-trigger.open{border-color:#e84393;background:white;}
+.ms-trigger.open{border-color:#dc2626;background:white;}
 .ms-arrow{position:absolute;right:8px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:10px;pointer-events:none;transition:transform .15s;}
 .ms-trigger.open ~ .ms-arrow{transform:translateY(-50%) rotate(180deg);}
-.ms-chip{background:#fce7f3;color:#be185d;border-radius:4px;padding:2px 6px;font-size:10px;font-weight:600;display:flex;align-items:center;gap:3px;white-space:nowrap;}
+.ms-chip{background:#fee2e2;color:#b91c1c;border-radius:4px;padding:2px 6px;font-size:10px;font-weight:600;display:flex;align-items:center;gap:3px;white-space:nowrap;}
 .ms-chip-x{cursor:pointer;opacity:.6;font-size:12px;}
 .ms-chip-x:hover{opacity:1;}
 .ms-placeholder{color:#9ca3af;font-size:12px;}
@@ -73,16 +73,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .ms-dropdown.open{display:block;}
 .ms-search{padding:8px 10px;border-bottom:1px solid #f3f4f6;}
 .ms-search input{width:100%;border:1px solid #e5e7eb;border-radius:6px;padding:5px 8px;font-size:12px;outline:none;}
-.ms-search input:focus{border-color:#e84393;}
+.ms-search input:focus{border-color:#dc2626;}
 .ms-actions{display:flex;border-bottom:1px solid #f3f4f6;}
-.ms-action-btn{flex:1;padding:6px;font-size:10px;font-weight:700;color:#e84393;background:none;border:none;cursor:pointer;text-transform:uppercase;}
-.ms-action-btn:hover{background:#fdf2f8;}
+.ms-action-btn{flex:1;padding:6px;font-size:10px;font-weight:700;color:#dc2626;background:none;border:none;cursor:pointer;text-transform:uppercase;}
+.ms-action-btn:hover{background:#fef2f2;}
 .ms-list{max-height:200px;overflow-y:auto;}
 .ms-option{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;font-size:12px;color:#374151;}
-.ms-option:hover{background:#fdf2f8;}
-.ms-option input[type=checkbox]{accent-color:#e84393;width:13px;height:13px;cursor:pointer;}
+.ms-option:hover{background:#fef2f2;}
+.ms-option input[type=checkbox]{accent-color:#dc2626;width:13px;height:13px;cursor:pointer;}
 .ms-option .rc{margin-left:auto;font-size:10px;color:#9ca3af;font-weight:600;}
-.ms-option.checked{background:#fdf2f8;color:#be185d;font-weight:500;}
+.ms-option.checked{background:#fef2f2;color:#b91c1c;font-weight:500;}
 .btn-reset{background:#f3f4f6;border:1px solid #e5e7eb;border-radius:7px;padding:7px 14px;font-size:11px;font-weight:600;color:#6b7280;cursor:pointer;}
 .btn-reset:hover{background:#e5e7eb;}
 .result-count{font-size:11px;color:#9ca3af;font-weight:500;margin-left:auto;}
@@ -93,9 +93,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 table{width:100%;border-collapse:collapse;font-size:12px;}
 thead th{background:#f9fafb;padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid #f3f4f6;cursor:pointer;user-select:none;white-space:nowrap;}
 thead th:hover{background:#f3f4f6;}
-thead th.sorted{color:#e84393;}
+thead th.sorted{color:#dc2626;}
 tbody tr{border-bottom:1px solid #f9fafb;transition:background .1s;}
-tbody tr:hover{background:#fdf2f8;}
+tbody tr:hover{background:#fef2f2;}
 tbody td{padding:10px 12px;color:#374151;vertical-align:middle;}
 .td-id{color:#9ca3af;font-size:10px;font-family:monospace;}
 .td-revenue{font-weight:600;text-align:right;}
@@ -111,7 +111,7 @@ tbody td{padding:10px 12px;color:#374151;vertical-align:middle;}
 .status-modified{background:#ffedd5;color:#c2410c;}.status-modified::before{background:#f97316;}
 .status-rejected{background:#f1f5f9;color:#475569;}.status-rejected::before{background:#94a3b8;}
 .badge-pkg{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;background:#e0e7ff;color:#3730a3;}
-.badge-pkg.party{background:#fce7f3;color:#be185d;}
+.badge-pkg.party{background:#fee2e2;color:#b91c1c;}
 .badge-meal{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;}
 .meal-lunch{background:#fef9c3;color:#854d0e;}
 .meal-dinner{background:#ede9fe;color:#5b21b6;}
@@ -119,7 +119,7 @@ tbody td{padding:10px 12px;color:#374151;vertical-align:middle;}
 .pagination{display:flex;align-items:center;justify-content:flex-end;gap:6px;padding:12px 18px;border-top:1px solid #f3f4f6;font-size:11px;color:#6b7280;}
 .page-btn{border:1px solid #e5e7eb;background:white;border-radius:5px;padding:4px 9px;cursor:pointer;font-size:11px;color:#374151;}
 .page-btn:hover{background:#f9fafb;}
-.page-btn.active{background:#e84393;color:white;border-color:#e84393;}
+.page-btn.active{background:#dc2626;color:white;border-color:#dc2626;}
 .page-btn:disabled{opacity:.4;cursor:default;}
 /* Mobile responsiveness */
 @media (max-width:1024px){
@@ -274,7 +274,7 @@ table{font-size:9px;}
     <div class="pickup-grid" id="pickupGrid"></div>
     <div class="chart-card">
       <h3>Daily booking pickup <span class="click-badge">clickable</span></h3>
-      <div class="chart-hint">Click a card above to change the range. Based on booking created date, excludes cancelled/no-show/rejected.</div>
+      <div class="chart-hint">Click a card above to change the range. Grouped by booking created date — red = covers picked up, grey = covers later cancelled / no-show / rejected.</div>
       <div style="position:relative;height:200px;"><canvas id="pickupChart"></canvas></div>
     </div>
   </div>
@@ -373,7 +373,7 @@ const ZERO_STATUSES = new Set(['Cancel','No Show','Cancel (modified)','Rejected'
 const MONTHS = ["2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06", "2026-07", "2026-08", "2026-09", "2026-10"];
 const MLABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct"];
 const STATUS_COLORS = {'Arrived':'#22c55e','Pending Arrival':'#f59e0b','Cancel':'#ef4444','No Show':'#a855f7','Cancel (modified)':'#f97316','Rejected':'#94a3b8'};
-const PKG_COLORS = {'All You Can Eat':'#e84393','Party Pack':'#6366f1','N/A':'#94a3b8'};
+const PKG_COLORS = {'All You Can Eat':'#dc2626','Party Pack':'#6366f1','N/A':'#94a3b8'};
 const MEAL_COLORS = ['#fbbf24','#7c3aed','#94a3b8'];
 
 // ─── Chart filter state ───────────────────────────────────────────────────
@@ -528,18 +528,24 @@ function pickupDailySeries(data, start, end) {
   const sYmd = ymd(start), eYmd = ymd(end);
   const byDay = {};
   data.forEach(r => {
-    if (!r.created_date || ZERO_STATUSES.has(r.status)) return;
+    if (!r.created_date) return;
     if (r.created_date < sYmd || r.created_date > eYmd) return;
-    if (!byDay[r.created_date]) byDay[r.created_date] = {count:0, covers:0, revenue:0};
-    byDay[r.created_date].count++;
-    byDay[r.created_date].covers += r.party_size||0;
-    byDay[r.created_date].revenue += r.restaurant_revenue||0;
+    if (!byDay[r.created_date]) byDay[r.created_date] = {pickupCount:0, pickupCovers:0, pickupRevenue:0, cxlCount:0, cxlCovers:0};
+    const d = byDay[r.created_date];
+    if (ZERO_STATUSES.has(r.status)) {
+      d.cxlCount++;
+      d.cxlCovers += r.party_size||0;
+    } else {
+      d.pickupCount++;
+      d.pickupCovers += r.party_size||0;
+      d.pickupRevenue += r.restaurant_revenue||0;
+    }
   });
   const days = [];
   let cur = new Date(start);
   while (ymd(cur) <= eYmd) {
     const key = ymd(cur);
-    const stat = byDay[key] || {count:0, covers:0, revenue:0};
+    const stat = byDay[key] || {pickupCount:0, pickupCovers:0, pickupRevenue:0, cxlCount:0, cxlCovers:0};
     days.push({date:key, ...stat});
     cur = addDays(cur, 1);
   }
@@ -576,27 +582,38 @@ function renderPickupChart(data) {
   const b = pickupPeriodBounds(pickupRange);
   const series = pickupDailySeries(data, b.start, b.end);
   const labels = series.map(d => { const [y,m,dd]=d.date.split('-'); return `${dd}/${m}`; });
-  const counts = series.map(d => d.count);
+  const pickupCovers = series.map(d => d.pickupCovers);
+  const cxlCovers = series.map(d => d.cxlCovers);
   if (pickupChart) {
     pickupChart.data.labels = labels;
-    pickupChart.data.datasets[0].data = counts;
+    pickupChart.data.datasets[0].data = pickupCovers;
     pickupChart.data.datasets[0]._meta = series;
+    pickupChart.data.datasets[1].data = cxlCovers;
+    pickupChart.data.datasets[1]._meta = series;
     pickupChart.update();
     return;
   }
   pickupChart = new Chart(document.getElementById('pickupChart'), {
     type: 'bar',
-    data: { labels, datasets: [{ label:'Bookings picked up', data: counts, backgroundColor:'#e84393bb', borderRadius:3, _meta: series }] },
+    data: {
+      labels,
+      datasets: [
+        { label:'Picked up covers', data: pickupCovers, backgroundColor:'#dc2626cc', stack:'covers', _meta: series },
+        { label:'Cancelled covers', data: cxlCovers, backgroundColor:'#94a3b8cc', stack:'covers', _meta: series },
+      ]
+    },
     options: {
       responsive:true, maintainAspectRatio:false,
       plugins: {
-        legend: { display:false },
+        legend: { display:true, position:'top', labels:{ boxWidth:10, font:{size:10} } },
         tooltip: { callbacks: { afterLabel: (ctx) => {
           const d = ctx.dataset._meta[ctx.dataIndex];
-          return `${d.covers} covers · ฿${d.revenue.toLocaleString()}`;
+          return ctx.datasetIndex===0
+            ? `${d.pickupCount} bookings · ฿${d.pickupRevenue.toLocaleString()}`
+            : `${d.cxlCount} cancelled bookings`;
         }}}
       },
-      scales: { y: { beginAtZero:true, ticks:{ precision:0 } } }
+      scales: { x: { stacked:true }, y: { stacked:true, beginAtZero:true, ticks:{ precision:0 } } }
     }
   });
 }
@@ -615,7 +632,7 @@ function selectPickupRange(key) {
 let pieChart, monthlyCombo, partySizeChart, pkgTypeChart, mealChart;
 
 function getMonthBarColors() {
-  return MONTHS.map(m => activeMonths.size===0 ? '#e84393bb' : activeMonths.has(m) ? '#c2185b' : '#e8439344');
+  return MONTHS.map(m => activeMonths.size===0 ? '#dc2626bb' : activeMonths.has(m) ? '#b91c1c' : '#dc262644');
 }
 function getPkgColors(labels) {
   return labels.map(l => activePkg===null ? (PKG_COLORS[l]||'#94a3b8') : activePkg===l ? (PKG_COLORS[l]||'#94a3b8') : 'rgba(150,150,150,0.25)');
