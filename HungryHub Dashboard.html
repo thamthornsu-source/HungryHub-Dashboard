@@ -27,6 +27,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .chart-card h3{font-size:11px;font-weight:700;color:#374151;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:8px;}
 .chart-hint{font-size:10px;color:#9ca3af;margin-bottom:10px;}
 .click-badge{background:#fce7f3;color:#be185d;border-radius:4px;padding:1px 6px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;flex-shrink:0;}
+/* Booking pickup section */
+.pickup-section{margin-bottom:18px;}
+.pickup-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:14px;}
+.pickup-card{background:white;border-radius:10px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.07);border:2px solid transparent;cursor:pointer;transition:border-color .15s;}
+.pickup-card:hover{border-color:#f3c6dc;}
+.pickup-card.active{border-color:#e84393;background:#fff5fa;}
+.pickup-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;margin-bottom:6px;}
+.pickup-value{font-size:24px;font-weight:700;color:#111827;line-height:1;}
+.pickup-delta{font-size:11px;font-weight:600;margin-top:5px;}
+.pickup-delta.up{color:#16a34a;}
+.pickup-delta.down{color:#dc2626;}
+.pickup-delta.flat{color:#9ca3af;}
+.pickup-meta{display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;margin-top:8px;padding-top:8px;border-top:1px solid #f3f4f6;}
 /* Active filter pills */
 .active-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;min-height:0;}
 .pill{display:inline-flex;align-items:center;gap:5px;background:#fce7f3;border:1px solid #f9a8d4;border-radius:20px;padding:3px 10px;font-size:11px;color:#be185d;font-weight:600;}
@@ -113,11 +126,13 @@ tbody td{padding:10px 12px;color:#374151;vertical-align:middle;}
 .kpi-grid{grid-template-columns:repeat(4,1fr);}
 .charts-row{grid-template-columns:1fr;}
 .charts-row3{grid-template-columns:repeat(2,1fr);}
+.pickup-grid{grid-template-columns:repeat(3,1fr);}
 .container{padding:16px 20px;}
 .header{padding:16px 20px;}
 }
 @media (max-width:768px){
 .kpi-grid{grid-template-columns:repeat(3,1fr);gap:12px;}
+.pickup-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
 .kpi-card{padding:14px 12px;}
 .kpi-label{font-size:9px;}
 .kpi-value{font-size:22px;}
@@ -153,6 +168,9 @@ tbody td{padding:8px 10px;}
 .chart-card h3{font-size:9px;margin-bottom:4px;}
 .chart-hint{font-size:9px;margin-bottom:8px;}
 .charts-row3{grid-template-columns:1fr;gap:12px;}
+.pickup-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+.pickup-card{padding:10px 12px;}
+.pickup-value{font-size:20px;}
 .filter-row{gap:8px;}
 .filter-group{min-width:100px;flex-grow:1;}
 .filter-group label{font-size:8px;}
@@ -187,6 +205,7 @@ tbody tr:hover{background:white;}
 }
 @media (max-width:400px){
 .kpi-grid{grid-template-columns:1fr;}
+.pickup-grid{grid-template-columns:1fr;}
 .header h1{font-size:14px;}
 .header .subtitle{font-size:10px;}
 .container{padding:10px 12px;}
@@ -248,6 +267,15 @@ table{font-size:9px;}
       <div class="chart-hint">Click a segment to filter. Click again to deselect.</div>
       <div class="active-pills" id="mealPills"></div>
       <div style="position:relative;height:155px;"><canvas id="mealChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="pickup-section">
+    <div class="pickup-grid" id="pickupGrid"></div>
+    <div class="chart-card">
+      <h3>Daily booking pickup <span class="click-badge">clickable</span></h3>
+      <div class="chart-hint">Click a card above to change the range. Based on booking created date, excludes cancelled/no-show/rejected.</div>
+      <div style="position:relative;height:200px;"><canvas id="pickupChart"></canvas></div>
     </div>
   </div>
 
@@ -449,6 +477,140 @@ function agg(data) {
   return {mRev,mGuests,sc,ps,pt,mc};
 }
 
+// ─── Booking pickup (created_date based) ──────────────────────────────────
+let pickupRange = 'last30';
+let pickupChart;
+const PICKUP_RANGES = [
+  {key:'last7',  label:'Last 7 days'},
+  {key:'last14', label:'Last 14 days'},
+  {key:'last30', label:'Last 30 days'},
+  {key:'thisMonth', label:'This month'},
+  {key:'lastMonth', label:'Last month'},
+];
+
+function todayLocal() { const t = new Date(); return new Date(t.getFullYear(), t.getMonth(), t.getDate()); }
+function addDays(d, n) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()+n); }
+function ymd(d) { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function daysInMonth(y, m) { return new Date(y, m+1, 0).getDate(); } // m is 0-indexed
+
+function pickupPeriodBounds(key) {
+  const today = todayLocal();
+  const y = today.getFullYear(), m = today.getMonth();
+  if (key === 'last7')  return {start: addDays(today,-6),  end: today, prevStart: addDays(today,-13), prevEnd: addDays(today,-7)};
+  if (key === 'last14') return {start: addDays(today,-13), end: today, prevStart: addDays(today,-27), prevEnd: addDays(today,-14)};
+  if (key === 'last30') return {start: addDays(today,-29), end: today, prevStart: addDays(today,-59), prevEnd: addDays(today,-30)};
+  if (key === 'thisMonth') {
+    const start = new Date(y, m, 1);
+    const prevMonthY = m===0 ? y-1 : y, prevMonthM = m===0 ? 11 : m-1;
+    const prevEndDay = Math.min(today.getDate(), daysInMonth(prevMonthY, prevMonthM));
+    return {start, end: today, prevStart: new Date(prevMonthY, prevMonthM, 1), prevEnd: new Date(prevMonthY, prevMonthM, prevEndDay)};
+  }
+  if (key === 'lastMonth') {
+    const lmY = m===0 ? y-1 : y, lmM = m===0 ? 11 : m-1;
+    const start = new Date(lmY, lmM, 1), end = new Date(lmY, lmM, daysInMonth(lmY, lmM));
+    const pmY = lmM===0 ? lmY-1 : lmY, pmM = lmM===0 ? 11 : lmM-1;
+    return {start, end, prevStart: new Date(pmY, pmM, 1), prevEnd: new Date(pmY, pmM, daysInMonth(pmY, pmM))};
+  }
+}
+
+function pickupStats(data, start, end) {
+  const sYmd = ymd(start), eYmd = ymd(end);
+  let count=0, covers=0, revenue=0;
+  data.forEach(r => {
+    if (!r.created_date || ZERO_STATUSES.has(r.status)) return;
+    if (r.created_date < sYmd || r.created_date > eYmd) return;
+    count++; covers += r.party_size||0; revenue += r.restaurant_revenue||0;
+  });
+  return {count, covers, revenue};
+}
+
+function pickupDailySeries(data, start, end) {
+  const sYmd = ymd(start), eYmd = ymd(end);
+  const byDay = {};
+  data.forEach(r => {
+    if (!r.created_date || ZERO_STATUSES.has(r.status)) return;
+    if (r.created_date < sYmd || r.created_date > eYmd) return;
+    if (!byDay[r.created_date]) byDay[r.created_date] = {count:0, covers:0, revenue:0};
+    byDay[r.created_date].count++;
+    byDay[r.created_date].covers += r.party_size||0;
+    byDay[r.created_date].revenue += r.restaurant_revenue||0;
+  });
+  const days = [];
+  let cur = new Date(start);
+  while (ymd(cur) <= eYmd) {
+    const key = ymd(cur);
+    const stat = byDay[key] || {count:0, covers:0, revenue:0};
+    days.push({date:key, ...stat});
+    cur = addDays(cur, 1);
+  }
+  return days;
+}
+
+function pickupDeltaHtml(cur, prev) {
+  if (prev === 0) {
+    if (cur === 0) return '<div class="pickup-delta flat">— vs prev period</div>';
+    return '<div class="pickup-delta up">▲ New vs prev period</div>';
+  }
+  const pct = (cur-prev)/prev*100;
+  const cls = pct>0 ? 'up' : pct<0 ? 'down' : 'flat';
+  const arrow = pct>0 ? '▲' : pct<0 ? '▼' : '—';
+  return `<div class="pickup-delta ${cls}">${arrow} ${Math.abs(pct).toFixed(0)}% vs prev period</div>`;
+}
+
+function renderPickupCards(data) {
+  const grid = document.getElementById('pickupGrid');
+  grid.innerHTML = PICKUP_RANGES.map(({key,label}) => {
+    const b = pickupPeriodBounds(key);
+    const cur = pickupStats(data, b.start, b.end);
+    const prev = pickupStats(data, b.prevStart, b.prevEnd);
+    return `<div class="pickup-card${pickupRange===key?' active':''}" onclick="selectPickupRange('${key}')">
+      <div class="pickup-label">${label}</div>
+      <div class="pickup-value">${cur.count.toLocaleString()}</div>
+      ${pickupDeltaHtml(cur.count, prev.count)}
+      <div class="pickup-meta"><span>${cur.covers.toLocaleString()} covers</span><span>฿${cur.revenue.toLocaleString()}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function renderPickupChart(data) {
+  const b = pickupPeriodBounds(pickupRange);
+  const series = pickupDailySeries(data, b.start, b.end);
+  const labels = series.map(d => { const [y,m,dd]=d.date.split('-'); return `${dd}/${m}`; });
+  const counts = series.map(d => d.count);
+  if (pickupChart) {
+    pickupChart.data.labels = labels;
+    pickupChart.data.datasets[0].data = counts;
+    pickupChart.data.datasets[0]._meta = series;
+    pickupChart.update();
+    return;
+  }
+  pickupChart = new Chart(document.getElementById('pickupChart'), {
+    type: 'bar',
+    data: { labels, datasets: [{ label:'Bookings picked up', data: counts, backgroundColor:'#e84393bb', borderRadius:3, _meta: series }] },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins: {
+        legend: { display:false },
+        tooltip: { callbacks: { afterLabel: (ctx) => {
+          const d = ctx.dataset._meta[ctx.dataIndex];
+          return `${d.covers} covers · ฿${d.revenue.toLocaleString()}`;
+        }}}
+      },
+      scales: { y: { beginAtZero:true, ticks:{ precision:0 } } }
+    }
+  });
+}
+
+function updatePickup(data) {
+  renderPickupCards(data);
+  renderPickupChart(data);
+}
+
+function selectPickupRange(key) {
+  pickupRange = key;
+  updatePickup(filtered);
+}
+
 // ─── Charts ────────────────────────────────────────────────────────────────
 let pieChart, monthlyCombo, partySizeChart, pkgTypeChart, mealChart;
 
@@ -641,6 +803,7 @@ function applyFilters() {
   currentPage = 1;
   updateKPIs(filtered);
   updateCharts(filtered);
+  updatePickup(filtered);
   renderTable();
 }
 
@@ -706,6 +869,7 @@ function goPage(p) { const pages=Math.ceil(filtered.length/PAGE_SIZE); if(p<1||p
 buildOptionList();
 updateKPIs(RAW_DATA);
 buildCharts();
+updatePickup(RAW_DATA);
 applySort();
 renderTable();
 </script>
